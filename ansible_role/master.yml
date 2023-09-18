@@ -1,0 +1,5 @@
+---
+- name: first my ansible galaxy
+  hosts: server
+  roles:
+  - ithub

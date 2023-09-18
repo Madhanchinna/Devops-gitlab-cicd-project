@@ -1,0 +1,76 @@
+---
+# Tasks file for ithub
+
+- name: package to install
+  yum:
+    name: "{{ pkgs }}"
+    state: absent
+
+- name: Debug srv variable
+  debug:
+    var: srv
+
+- name: docker installing using the script
+  script: docker_install.sh
+
+- name: "adding custom user to docker group"
+  user:
+    user: "gokulan"
+    groups: docker
+    append: true
+
+- name: Doing service activity
+  service:
+    #name: "{{ srv }}"
+    name: docker
+    state: started
+    enabled: yes
+  notify:
+  - restartweb
+
+- name: "restarting & enabling docker service"
+  service:
+    name: docker
+    state: restarted
+    enabled: true      
+
+#- name: Pull Docker Image from Private Repository
+
+- name: Docker Login to the Private Registry
+  ansible.builtin.docker_login:
+    registry_url: "{{ registry.url }}"
+    username: "{{ registry_username }}"
+    password: "{{ registry_password }}"
+  when: registry_username is defined and registry_password is defined
+
+- name: Display the variables
+  debug:
+    msg: "The value of {{ registry.url }}/{{ registry.image }}:{{ registry.tag }}"
+    
+- name: Pull Docker Image
+  ansible.builtin.docker_image:
+    name: "{{ registry.url }}/{{ registry.image }}:{{ registry.tag }}"
+    source: pull
+    state: present
+  tags: pull
+  become: yes
+  become_user: gokulan
+- name: Docker Logout from the Private Registry
+  ansible.builtin.docker_login:
+    registry_url: "{{ registry_url }}"
+    username: "{{ registry_username }}"
+    password: "{{ registry_password }}"
+    state: absent
+  when: registry_username is defined and registry_password is defined
+
+ 
+- name: Run the container
+  docker_container:
+    name: java_webapp
+#    image: "{{ gitlab_container_image }}"
+    image: "{{ registry.url }}/{{ registry.image }}:{{ registry.tag }}"
+    recreate: yes
+    pull: yes
+    published_ports: "80:8080"
+  become: true
+  become_user: gokulan

@@ -1,0 +1,15 @@
+---
+# vars file for ithub
+pkgs:
+  - git
+  - pip
+  - expect
+srv:
+  - docker
+
+gitlab_container_image: registry.gitlab.com/peerxp1/java_180823_6793
+
+registry:
+  url: registry.gitlab.com
+  image: peerxp1/java_180823_6793
+  tag: latest
